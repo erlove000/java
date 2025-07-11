@@ -1,0 +1,257 @@
+from datetime import datetime
+from decimal import Decimal
+import psycopg2
+
+# === DATABASE CONNECTIONS ===
+# Main (live) DB
+conn_main = psycopg2.connect(
+    # dbname='egov_prod_db',
+    # user='egovprod',
+    # password='jr88WZdM#4YU##1Q',
+    # host='10.44.237.25',
+    # port='5432'
+
+    dbname='postgres',
+    user='postgres',
+    password='postgres',
+    host='localhost',
+    port='5432'
+)
+cur_main = conn_main.cursor()
+
+# Local (logging + queue) DB
+conn_local = psycopg2.connect(
+    dbname='postgres',
+    user='postgres',
+    password='postgres',
+    host='localhost',
+    port='5432'
+)
+cur_local = conn_local.cursor()
+
+# === LOGGING FUNCTIONS ===
+def log_full_sql_query_v2(local_cursor, consumer_code, tenant_id, receipt_number, advance_amount,
+                          demand_id, demand_detail_id, query_valid_advances,
+                          check_future_payment_query, select_advance_demand_query,
+                          select_future_demand_query, cancel_queries, update_advance_query,
+                          update_demand_status_query, expire_bill_query, update_bill_queries):
+    cancel_queries_str = "\n".join(cancel_queries)
+    update_bill_queries_str = "\n".join(update_bill_queries)
+
+    local_cursor.execute("""
+        INSERT INTO full_sql_query_log (
+            consumer_code, tenant_id, receipt_number, advance_amount,
+            demand_id, demand_detail_id, query_valid_advances,
+            check_future_payment_query, select_advance_demand_query,
+            select_future_demand_query, cancel_queries,
+            update_advance_query, update_demand_status_query,
+            expire_bill_query, update_bill_queries, failure_reason
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NULL);
+    """, (
+        consumer_code, tenant_id, receipt_number, advance_amount,
+        demand_id, demand_detail_id, query_valid_advances.strip(),
+        check_future_payment_query.strip(), select_advance_demand_query.strip(),
+        select_future_demand_query.strip(), cancel_queries_str,
+        update_advance_query.strip(), update_demand_status_query.strip(),
+        expire_bill_query.strip(), update_bill_queries_str
+    ))
+
+def log_failure_reason_only(local_cursor, consumer_code, tenant_id, receipt_number, advance_amount, failure_reason):
+    local_cursor.execute("""
+        INSERT INTO full_sql_query_log (
+            consumer_code, tenant_id, receipt_number, advance_amount, failure_reason
+        ) VALUES (%s, %s, %s, %s, %s);
+    """, (
+        consumer_code, tenant_id, receipt_number, advance_amount, failure_reason
+    ))
+
+# === FETCH QUEUE ===
+cur_local.execute("""
+    SELECT id, consumer_code, tenant_id, business_service
+    FROM advance_payment_details
+    WHERE processed = FALSE
+    ORDER BY id;
+""")
+queue_items = cur_local.fetchall()
+
+for queue_id, consumer_code, tenant_id, business_service in queue_items:
+    try:
+        # === STEP 0: Fetch Valid Advance Payment ===
+        query_valid_advances = f"""
+            SELECT 
+                bill.consumercode,
+                pd.receiptnumber, 
+                p.totalamountpaid, 
+                p.paymentstatus, 
+                bill.status, 
+                bill.totalamount, 
+                pd.receiptdate,
+                bill.tenantid,
+                bill.businessservice
+            FROM egcl_payment p
+            JOIN egcl_paymentdetail pd ON pd.paymentid = p.id
+            JOIN egcl_bill bill ON bill.id = pd.billid
+            WHERE 
+                bill.tenantid = '{tenant_id}'
+                AND bill.businessservice = '{business_service}'
+                AND bill.consumercode = '{consumer_code}'
+                AND pd.amountpaid > pd.due
+                AND NOT EXISTS (
+                    SELECT 1 
+                    FROM egcl_paymentdetail pd2
+                    JOIN egcl_bill bill2 ON bill2.id = pd2.billid
+                    WHERE 
+                        bill2.consumercode = bill.consumercode
+                        AND bill2.tenantid = '{tenant_id}'
+                        AND pd2.receiptdate > pd.receiptdate
+                )
+            ORDER BY pd.createdtime DESC;
+        """
+        cur_main.execute(query_valid_advances)
+        row = cur_main.fetchone()
+
+        if not row:
+            raise Exception("No valid advance receipt found.")
+
+        consumer_code, receipt_number, total_paid, _, _, total_amount, receipt_date, tenant_id, business_service = row
+        total_paid = Decimal(total_paid)
+        total_amount = Decimal(total_amount)
+        advance_amount = total_paid - total_amount
+
+        if advance_amount <= 0:
+            raise Exception("Advance amount not positive")
+
+        # === STEP 1: Check if newer payment exists ===
+        query_check_new_payment = f"""
+            SELECT *
+            FROM egcl_payment p
+            JOIN egcl_paymentdetail pd ON pd.paymentid = p.id
+            JOIN egcl_bill bill ON bill.id = pd.billid
+            WHERE 
+                bill.tenantid = '{tenant_id}'
+                AND bill.businessservice = '{business_service}'
+                AND bill.consumercode = '{consumer_code}'
+                AND pd.receiptdate > '{receipt_date}';
+        """
+        cur_main.execute(query_check_new_payment)
+        if cur_main.fetchone():
+            log_failure_reason_only(cur_local, consumer_code, tenant_id, receipt_number, float(advance_amount),
+                                    "New payment found after advance")
+            cur_local.execute("""
+                UPDATE advance_payment_details
+                SET processed = TRUE, processed_at = %s, error_reason = %s
+                WHERE id = %s;
+            """, (datetime.now(), "New payment found after advance", queue_id))
+            conn_local.commit()
+            continue
+
+        # === STEP 2: Get Advance Demand ===
+        select_advance_demand_query = f"""
+            SELECT pd.receiptnumber, dd.demandid, dd.id AS demanddetailsid
+            FROM egcl_paymentdetail pd 
+            JOIN egcl_bill bill ON bill.id = pd.billid
+            JOIN egbs_billdetail_v1 bd ON bd.billid = bill.id 
+            JOIN egbs_demanddetail_v1 dd ON bd.demandid = dd.demandid
+            JOIN egbs_demand_v1 d ON dd.demandid = d.id 
+            WHERE pd.receiptnumber = '{receipt_number}'
+            AND bd.businessservice = '{business_service}'
+            AND dd.taxheadcode = '{business_service}_ADVANCE_CARRYFORWARD'
+            AND TO_CHAR(TO_TIMESTAMP(dd.createdtime / 1000) AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD') = 
+            TO_CHAR(TO_TIMESTAMP(pd.receiptdate / 1000) AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD');
+        """
+        cur_main.execute(select_advance_demand_query)
+        demand_data = cur_main.fetchone()
+        if not demand_data:
+            raise Exception("Advance demand detail not found")
+
+        demand_id = demand_data[1]
+        demand_detail_id = demand_data[2]
+
+        # === STEP 3: Cancel Future Demands ===
+        select_future_demand_query = f"""
+            SELECT d.id
+            FROM egbs_demand_v1 d
+            WHERE 
+                d.businessservice = '{business_service}'
+                AND d.tenantid = '{tenant_id}'  
+                AND d.consumercode = '{consumer_code}'
+                AND d.status != 'CANCELLED'
+                AND d.taxperiodfrom > (
+                    SELECT taxperiodfrom FROM egbs_demand_v1 WHERE id = '{demand_id}'
+                )
+            ORDER BY d.taxperiodfrom;
+        """
+        cur_main.execute(select_future_demand_query)
+        future_rows = cur_main.fetchall()
+        cancel_queries = []
+        for (cancel_id,) in future_rows:
+            cancel_sql = f"UPDATE egbs_demand_v1 SET status = 'CANCELLED' WHERE id = '{cancel_id}';"
+            cancel_queries.append(cancel_sql)
+            cur_main.execute(cancel_sql)
+
+        # === STEP 4: Update Advance Record ===
+        update_advance_query = f"""
+            UPDATE egbs_demanddetail_v1
+            SET taxamount = {-advance_amount}, collectionamount = 0
+            WHERE id = '{demand_detail_id}';
+        """
+        cur_main.execute(update_advance_query)
+
+        update_demand_status_query = f"""
+            UPDATE egbs_demand_v1
+            SET ispaymentcompleted = true
+            WHERE id = '{demand_id}';
+        """
+        cur_main.execute(update_demand_status_query)
+
+        # === STEP 5: Expire Bills ===
+        expire_bill_query = f"""
+            SELECT bill.id
+            FROM egbs_bill_v1 bill
+            JOIN egbs_billdetail_v1 bd ON bd.billid = bill.id
+            WHERE 
+                bill.status = 'ACTIVE'
+                AND bd.businessservice = '{business_service}'
+                AND bd.consumercode = '{consumer_code}'
+                AND bill.tenantid = '{tenant_id}';
+        """
+        cur_main.execute(expire_bill_query)
+        active_bills = cur_main.fetchall()
+        update_bill_queries = []
+        for (bill_id,) in active_bills:
+            update_bill_sql = f"UPDATE egbs_bill_v1 SET status = 'EXPIRED' WHERE id = '{bill_id}';"
+            update_bill_queries.append(update_bill_sql)
+            cur_main.execute(update_bill_sql)
+
+        # === COMMIT + LOG ===
+        conn_main.commit()
+        log_full_sql_query_v2(cur_local, consumer_code, tenant_id, receipt_number, float(advance_amount),
+                              demand_id, demand_detail_id, query_valid_advances, query_check_new_payment,
+                              select_advance_demand_query, select_future_demand_query, cancel_queries,
+                              update_advance_query, update_demand_status_query,
+                              expire_bill_query, update_bill_queries)
+
+        cur_local.execute("""
+            UPDATE advance_payment_details
+            SET processed = TRUE, processed_at = %s
+            WHERE id = %s;
+        """, (datetime.now(), queue_id))
+        conn_local.commit()
+        print(f"✅ Processed: {consumer_code} / {receipt_number}")
+
+    except Exception as e:
+        print(f"❌ Error for {consumer_code}: {e}")
+        conn_main.rollback()
+        cur_local.execute("""
+            UPDATE advance_payment_details
+            SET processed = TRUE, processed_at = %s, error_reason = %s
+            WHERE id = %s;
+        """, (datetime.now(), str(e), queue_id))
+        conn_local.commit()
+
+# === CLEANUP ===
+cur_main.close()
+conn_main.close()
+cur_local.close()
+conn_local.close()
+print("✅ Queue processing completed.")
