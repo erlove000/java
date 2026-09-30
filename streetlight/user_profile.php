@@ -581,7 +581,7 @@ function get_rev_val($data, $key) {
             <div class="d-flex align-items-baseline">
               <p class="mb-0">Home</p>
               <i class="typcn typcn-chevron-right"></i>
-              <p class="mb-0">User Profile (Know Your ULB)</p>
+              <p class="mb-0">Know Your ULB</p>
             </div>
           </li>
         </ul>
