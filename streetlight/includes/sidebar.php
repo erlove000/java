@@ -95,8 +95,18 @@
       </a>
     </li>
 
-   
+    <li class="nav-item">
+      <a class="nav-link" href="user_profile.php">
+      <i class="typcn typcn-user-outline menu-icon"></i> 
+      <span class="menu-title">User Profile</span>
+      </a>
+    </li>
 
-  
+    <li class="nav-item">
+      <a class="nav-link" href="user_profile_report.php">
+      <i class="typcn typcn-chart-bar-outline menu-icon"></i> 
+      <span class="menu-title">ULB Profile Report</span>
+      </a>
+    </li>
   </ul>
 </nav>
