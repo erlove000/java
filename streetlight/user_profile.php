@@ -535,18 +535,26 @@ function render_dynamic_questions($con, $category_id, $existing_responses = arra
   $sql = "SELECT * FROM ulb_questions WHERE category_id = " . (int)$category_id . " AND is_active = 1 ORDER BY sort_order, id";
   $res = $con->query($sql);
   if ($res && $res->num_rows > 0) {
-    echo '<div class="row mt-4 border-top pt-3 w-100"><div class="col-12 font-weight-bold text-info mb-3"><i class="typcn typcn-plus"></i> Additional Custom Questions</div>';
     while ($q = $res->fetch_assoc()) {
       $q_id = $q['id'];
-      $q_code = !empty($q['question_code']) ? htmlspecialchars($q['question_code']) : ('Qdyn_' . $q_id);
+      $q_code = !empty($q['question_code']) ? htmlspecialchars($q['question_code']) : (110 + $q_id);
+      
+      // Auto-format badge to match Q1, Q2... Q111
+      $badge_label = $q_code;
+      if (!preg_match('/^Q/i', (string)$badge_label)) {
+        $badge_label = 'Q' . $badge_label;
+      }
+
       $q_text = htmlspecialchars($q['question_text']);
       $q_type = $q['input_type'];
       $req = $q['is_mandatory'] ? 'required' : '';
-      $req_star = $q['is_mandatory'] ? '<span class="req-star">*</span>' : '';
+      $req_star = $q['is_mandatory'] ? ' <span class="req-star">*</span>' : '';
       $val = isset($existing_responses[$q_id]) ? htmlspecialchars($existing_responses[$q_id]) : '';
 
-      echo '<div class="col-md-6 form-group">';
-      echo '<label class="q-label"><span class="badge-qno">' . $q_code . '</span> ' . $q_text . $req_star . '</label>';
+      $col_class = ($q_type == 'select_multiple' || strlen($q_text) > 50) ? 'col-md-12' : (($q_type == 'select_one' || $q_type == 'text') ? 'col-md-6' : 'col-md-4');
+
+      echo '<div class="' . $col_class . ' form-group">';
+      echo '<label class="q-label"><span class="badge-qno">' . $badge_label . '</span> ' . $q_text . $req_star . '</label>';
 
       if ($q_type == 'select_one') {
         echo '<select class="form-control" name="dyn_q[' . $q_id . ']" ' . $req . '>';
@@ -567,7 +575,7 @@ function render_dynamic_questions($con, $category_id, $existing_responses = arra
           $opt = trim($opt);
           if ($opt === '') continue;
           $chk = in_array($opt, $selected_arr) ? 'checked' : '';
-          echo '<div class="col-md-6 form-check"><label class="form-check-label"><input type="checkbox" class="form-check-input" name="dyn_q[' . $q_id . '][]" value="' . htmlspecialchars($opt) . '" ' . $chk . '> ' . htmlspecialchars($opt) . '</label></div>';
+          echo '<div class="col-md-4 form-check"><label class="form-check-label"><input type="checkbox" class="form-check-input" name="dyn_q[' . $q_id . '][]" value="' . htmlspecialchars($opt) . '" ' . $chk . '> ' . htmlspecialchars($opt) . '</label></div>';
         }
         echo '</div>';
       } elseif ($q_type == 'number') {
@@ -580,7 +588,6 @@ function render_dynamic_questions($con, $category_id, $existing_responses = arra
 
       echo '</div>';
     }
-    echo '</div>';
   }
 }
 ?>
