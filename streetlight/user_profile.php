@@ -473,6 +473,19 @@ if (isset($_POST['save_profile'])) {
 
     if ($con->query($query_insert)) {
       $insert_id = $con->insert_id;
+
+      // Save Dynamic Question Responses
+      if (isset($_POST['dyn_q']) && is_array($_POST['dyn_q'])) {
+        foreach ($_POST['dyn_q'] as $dq_id => $dq_val) {
+          $dq_id = (int)$dq_id;
+          if (is_array($dq_val)) {
+            $dq_val = implode(', ', $dq_val);
+          }
+          $dq_val = mysqli_real_escape_string($con, $dq_val);
+          $con->query("INSERT INTO ulb_question_responses (submission_id, town_id, question_id, response_value) VALUES ($insert_id, $target_town_id, $dq_id, '$dq_val')");
+        }
+      }
+
       $msg = "ULB Profile submission #$insert_id saved successfully! Form has been reset for new entry.";
       $form_submitted_success = true;
     } else {
@@ -483,11 +496,20 @@ if (isset($_POST['save_profile'])) {
 
 // Load existing saved profile data ONLY if specific ID is passed in GET
 $existing_data = array();
+$existing_dyn_responses = array();
 
 if (isset($_GET['id']) && (int)$_GET['id'] > 0) {
   $res_ex = $con->query("SELECT * FROM ulb_user_profile WHERE id = " . (int)$_GET['id']);
   if ($res_ex && $res_ex->num_rows > 0) {
     $existing_data = $res_ex->fetch_assoc();
+
+    // Fetch dynamic question responses for this submission
+    $res_dyn_resp = $con->query("SELECT question_id, response_value FROM ulb_question_responses WHERE submission_id = " . (int)$_GET['id']);
+    if ($res_dyn_resp && $res_dyn_resp->num_rows > 0) {
+      while ($rdr = $res_dyn_resp->fetch_assoc()) {
+        $existing_dyn_responses[$rdr['question_id']] = $rdr['response_value'];
+      }
+    }
   }
 }
 
@@ -506,6 +528,60 @@ function get_rev_val($data, $key) {
   if (empty($data['revenue_breakdown_json'])) return '';
   $arr = json_decode($data['revenue_breakdown_json'], true);
   return isset($arr[$key]) ? htmlspecialchars($arr[$key]) : '';
+}
+
+// Render dynamic questions added by Admin for a given category ID
+function render_dynamic_questions($con, $category_id, $existing_responses = array()) {
+  $sql = "SELECT * FROM ulb_questions WHERE category_id = " . (int)$category_id . " AND is_active = 1 ORDER BY sort_order, id";
+  $res = $con->query($sql);
+  if ($res && $res->num_rows > 0) {
+    echo '<div class="row mt-4 border-top pt-3 w-100"><div class="col-12 font-weight-bold text-info mb-3"><i class="typcn typcn-plus"></i> Additional Custom Questions</div>';
+    while ($q = $res->fetch_assoc()) {
+      $q_id = $q['id'];
+      $q_code = !empty($q['question_code']) ? htmlspecialchars($q['question_code']) : ('Qdyn_' . $q_id);
+      $q_text = htmlspecialchars($q['question_text']);
+      $q_type = $q['input_type'];
+      $req = $q['is_mandatory'] ? 'required' : '';
+      $req_star = $q['is_mandatory'] ? '<span class="req-star">*</span>' : '';
+      $val = isset($existing_responses[$q_id]) ? htmlspecialchars($existing_responses[$q_id]) : '';
+
+      echo '<div class="col-md-6 form-group">';
+      echo '<label class="q-label"><span class="badge-qno">' . $q_code . '</span> ' . $q_text . $req_star . '</label>';
+
+      if ($q_type == 'select_one') {
+        echo '<select class="form-control" name="dyn_q[' . $q_id . ']" ' . $req . '>';
+        echo '<option value="">-- Select --</option>';
+        $opts = explode(';', $q['choice_options']);
+        foreach ($opts as $opt) {
+          $opt = trim($opt);
+          if ($opt === '') continue;
+          $sel = ($val == $opt) ? 'selected' : '';
+          echo '<option value="' . htmlspecialchars($opt) . '" ' . $sel . '>' . htmlspecialchars($opt) . '</option>';
+        }
+        echo '</select>';
+      } elseif ($q_type == 'select_multiple') {
+        echo '<div class="row px-3">';
+        $opts = explode(';', $q['choice_options']);
+        $selected_arr = explode(', ', $val);
+        foreach ($opts as $opt) {
+          $opt = trim($opt);
+          if ($opt === '') continue;
+          $chk = in_array($opt, $selected_arr) ? 'checked' : '';
+          echo '<div class="col-md-6 form-check"><label class="form-check-label"><input type="checkbox" class="form-check-input" name="dyn_q[' . $q_id . '][]" value="' . htmlspecialchars($opt) . '" ' . $chk . '> ' . htmlspecialchars($opt) . '</label></div>';
+        }
+        echo '</div>';
+      } elseif ($q_type == 'number') {
+        echo '<input type="number" class="form-control" name="dyn_q[' . $q_id . ']" value="' . $val . '" placeholder="Enter a number" ' . $req . '>';
+      } elseif ($q_type == 'decimal') {
+        echo '<input type="number" step="0.01" class="form-control" name="dyn_q[' . $q_id . ']" value="' . $val . '" placeholder="Enter amount / value" ' . $req . '>';
+      } else {
+        echo '<input type="text" class="form-control" name="dyn_q[' . $q_id . ']" value="' . $val . '" placeholder="Write a brief answer" ' . $req . '>';
+      }
+
+      echo '</div>';
+    }
+    echo '</div>';
+  }
 }
 ?>
 <!DOCTYPE html>
@@ -731,6 +807,7 @@ function get_rev_val($data, $key) {
                               ?>
                             </div>
                           </div>
+                          <?php render_dynamic_questions($con, 1, $existing_dyn_responses); ?>
                         </div>
                       </div>
 
@@ -777,6 +854,7 @@ function get_rev_val($data, $key) {
                             <label class="q-label"><span class="badge-qno">Q26</span> Property suitable for PPP Redevelopment?</label>
                             <select class="form-control" name="property_for_redev_ppp"><option value="No">No</option><option value="Yes">Yes</option></select>
                           </div>
+                          <?php render_dynamic_questions($con, 2, $existing_dyn_responses); ?>
                         </div>
                       </div>
 
@@ -787,6 +865,7 @@ function get_rev_val($data, $key) {
                           <div class="col-md-4 form-group"><label class="q-label"><span class="badge-qno">Q27</span> Community Halls owned by ULB</label><input type="number" class="form-control" name="community_halls_count" value="<?php echo get_val($existing_data, 'community_halls_count'); ?>"></div>
                           <div class="col-md-4 form-group"><label class="q-label"><span class="badge-qno">Q28</span> Sports Grounds / Stadiums maintained</label><input type="number" class="form-control" name="sports_grounds_count" value="<?php echo get_val($existing_data, 'sports_grounds_count'); ?>"></div>
                           <div class="col-md-4 form-group"><label class="q-label"><span class="badge-qno">Q29</span> Public Libraries / Reading rooms</label><input type="number" class="form-control" name="libraries_count" value="<?php echo get_val($existing_data, 'libraries_count'); ?>"></div>
+                          <?php render_dynamic_questions($con, 3, $existing_dyn_responses); ?>
                         </div>
                       </div>
 
@@ -800,6 +879,7 @@ function get_rev_val($data, $key) {
                             <label class="q-label"><span class="badge-qno">Q32</span> Central Control Room available?</label>
                             <select class="form-control" name="central_control_room"><option value="No">No</option><option value="Yes">Yes</option></select>
                           </div>
+                          <?php render_dynamic_questions($con, 4, $existing_dyn_responses); ?>
                         </div>
                       </div>
 
@@ -810,6 +890,7 @@ function get_rev_val($data, $key) {
                           <div class="col-md-4 form-group"><label class="q-label"><span class="badge-qno">Q33</span> Total Streetlights in ULB (LED & Non-LED)<span class="req-star">*</span></label><input type="number" class="form-control" name="total_streetlights" value="<?php echo get_val($existing_data, 'total_streetlights'); ?>" required></div>
                           <div class="col-md-4 form-group"><label class="q-label"><span class="badge-qno">Q34</span> Non-functional Streetlights<span class="req-star">*</span></label><input type="number" class="form-control" name="non_functional_streetlights" value="<?php echo get_val($existing_data, 'non_functional_streetlights'); ?>" required></div>
                           <div class="col-md-4 form-group"><label class="q-label"><span class="badge-qno">Q35</span> Annual Electricity Exp on Streetlights (₹ Lakh)</label><input type="number" step="0.01" class="form-control" name="streetlights_elec_exp_lakh" value="<?php echo get_val($existing_data, 'streetlights_elec_exp_lakh'); ?>"></div>
+                          <?php render_dynamic_questions($con, 5, $existing_dyn_responses); ?>
                         </div>
                       </div>
 
@@ -886,6 +967,7 @@ function get_rev_val($data, $key) {
                             <label class="q-label"><span class="badge-qno">Q55</span> Property Tax Linked with GIS?</label>
                             <select class="form-control" name="property_tax_gis_linked"><option value="No">No</option><option value="Yes">Yes</option><option value="Ongoing">Ongoing</option></select>
                           </div>
+                          <?php render_dynamic_questions($con, 6, $existing_dyn_responses); ?>
                         </div>
                       </div>
 
@@ -901,6 +983,7 @@ function get_rev_val($data, $key) {
                           <div class="col-md-4 form-group"><label class="q-label"><span class="badge-qno">Q61</span> Govt Schools in ULB Area</label><input type="number" class="form-control" name="govt_schools_count" value="<?php echo get_val($existing_data, 'govt_schools_count'); ?>"></div>
                           <div class="col-md-6 form-group"><label class="q-label"><span class="badge-qno">Q62</span> Anganwadi Centres in ULB Area</label><input type="number" class="form-control" name="anganwadi_centres_count" value="<?php echo get_val($existing_data, 'anganwadi_centres_count'); ?>"></div>
                           <div class="col-md-6 form-group"><label class="q-label"><span class="badge-qno">Q63</span> Anganwadis in ULB-owned Buildings</label><input type="number" class="form-control" name="anganwadi_in_ulb_building" value="<?php echo get_val($existing_data, 'anganwadi_in_ulb_building'); ?>"></div>
+                          <?php render_dynamic_questions($con, 7, $existing_dyn_responses); ?>
                         </div>
                       </div>
 
@@ -920,6 +1003,7 @@ function get_rev_val($data, $key) {
                           <div class="col-md-4 form-group"><label class="q-label"><span class="badge-qno">Q66</span> Approx. Number of Recorded Trees</label><input type="number" class="form-control" name="tree_count_recorded" value="<?php echo get_val($existing_data, 'tree_count_recorded'); ?>"></div>
                           <div class="col-md-6 form-group"><label class="q-label"><span class="badge-qno">Q67</span> Annual Exp on Parks & Trees (₹ Lakh)</label><input type="number" step="0.01" class="form-control" name="parks_exp_lakh" value="<?php echo get_val($existing_data, 'parks_exp_lakh'); ?>"></div>
                           <div class="col-md-6 form-group"><label class="q-label"><span class="badge-qno">Q68</span> Plant Nurseries Operated</label><input type="number" class="form-control" name="nurseries_count" value="<?php echo get_val($existing_data, 'nurseries_count'); ?>"></div>
+                          <?php render_dynamic_questions($con, 8, $existing_dyn_responses); ?>
                         </div>
                       </div>
 
@@ -954,6 +1038,7 @@ function get_rev_val($data, $key) {
                           <div class="col-md-3 form-group"><label class="q-label"><span class="badge-qno">Q74</span> Permanent Employees</label><input type="number" class="form-control" name="permanent_employees" value="<?php echo get_val($existing_data, 'permanent_employees'); ?>"></div>
                           <div class="col-md-3 form-group"><label class="q-label"><span class="badge-qno">Q75</span> Contractual / Outsourced Staff</label><input type="number" class="form-control" name="contractual_employees" value="<?php echo get_val($existing_data, 'contractual_employees'); ?>"></div>
                           <div class="col-md-3 form-group"><label class="q-label"><span class="badge-qno">Q76</span> Vacant Sanctioned Posts</label><input type="number" class="form-control" name="vacant_sanctioned_posts" value="<?php echo get_val($existing_data, 'vacant_sanctioned_posts'); ?>"></div>
+                          <?php render_dynamic_questions($con, 9, $existing_dyn_responses); ?>
                         </div>
                       </div>
 
@@ -974,6 +1059,7 @@ function get_rev_val($data, $key) {
                           <div class="col-md-4 form-group"><label class="q-label"><span class="badge-qno">Q87</span> Land Near Bus Stand for Commercial Use?</label><select class="form-control" name="land_near_bus_stand_comm"><option value="No">No</option><option value="Yes">Yes</option></select></div>
                           <div class="col-md-4 form-group"><label class="q-label"><span class="badge-qno">Q88</span> Public EV Charging Stations Count</label><input type="number" class="form-control" name="ev_charging_stations_count" value="<?php echo get_val($existing_data, 'ev_charging_stations_count'); ?>"></div>
                           <div class="col-md-12 form-group"><label class="q-label"><span class="badge-qno">Q89</span> ULB Land available for EV Charging Stations?</label><select class="form-control" name="land_for_ev_charging"><option value="No">No</option><option value="Yes">Yes</option></select></div>
+                          <?php render_dynamic_questions($con, 10, $existing_dyn_responses); ?>
                         </div>
                       </div>
 
@@ -983,6 +1069,7 @@ function get_rev_val($data, $key) {
                         <div class="row">
                           <div class="col-md-6 form-group"><label class="q-label"><span class="badge-qno">Q90</span> Functional Public Toilets Count</label><input type="number" class="form-control" name="functional_public_toilets" value="<?php echo get_val($existing_data, 'functional_public_toilets'); ?>"></div>
                           <div class="col-md-6 form-group"><label class="q-label"><span class="badge-qno">Q91</span> Cremation & Burial Grounds Maintained</label><input type="number" class="form-control" name="cremation_burial_grounds" value="<?php echo get_val($existing_data, 'cremation_burial_grounds'); ?>"></div>
+                          <?php render_dynamic_questions($con, 11, $existing_dyn_responses); ?>
                         </div>
                       </div>
 
@@ -992,6 +1079,7 @@ function get_rev_val($data, $key) {
                         <div class="row">
                           <div class="col-md-6 form-group"><label class="q-label"><span class="badge-qno">Q92</span> Registered Street Vendors Count</label><input type="number" class="form-control" name="registered_street_vendors" value="<?php echo get_val($existing_data, 'registered_street_vendors'); ?>"></div>
                           <div class="col-md-6 form-group"><label class="q-label"><span class="badge-qno">Q93</span> Designated Vending Zones & Names</label><input type="text" class="form-control" name="vending_zones_details" placeholder="Count & names of 2-3 main vending zones" value="<?php echo get_val($existing_data, 'vending_zones_details'); ?>"></div>
+                          <?php render_dynamic_questions($con, 12, $existing_dyn_responses); ?>
                         </div>
                       </div>
 
@@ -1016,6 +1104,7 @@ function get_rev_val($data, $key) {
                           <div class="col-md-4 form-group"><label class="q-label"><span class="badge-qno">Q108</span> Waste Segregation at Source (%)</label><input type="number" step="0.01" class="form-control" name="waste_segregation_pct" placeholder="0 - 100%" value="<?php echo get_val($existing_data, 'waste_segregation_pct'); ?>"></div>
                           <div class="col-md-6 form-group"><label class="q-label"><span class="badge-qno">Q109</span> Annual Exp on Solid Waste Management (₹ Lakh)</label><input type="number" step="0.01" class="form-control" name="swm_annual_exp_lakh" value="<?php echo get_val($existing_data, 'swm_annual_exp_lakh'); ?>"></div>
                           <div class="col-md-6 form-group"><label class="q-label"><span class="badge-qno">Q110</span> Legacy Waste Dumpsite in ULB Area?</label><select class="form-control" name="legacy_waste_dumpsite"><option value="No">No</option><option value="Yes">Yes</option></select></div>
+                          <?php render_dynamic_questions($con, 13, $existing_dyn_responses); ?>
                         </div>
                       </div>
 
