@@ -162,8 +162,35 @@ html, body {
   width: 270px !important;
 }
 
+/* Sidebar Icon-Only Collapsed Mode Rules */
 body.sidebar-icon-only .sidebar {
   width: 70px !important;
+}
+
+body.sidebar-icon-only .sidebar .sidebar-category-header {
+  display: none !important;
+}
+
+body.sidebar-icon-only .sidebar .nav .nav-item .menu-title {
+  display: none !important;
+}
+
+body.sidebar-icon-only .sidebar .nav .nav-item {
+  margin: 4px 6px !important;
+}
+
+body.sidebar-icon-only .sidebar .nav .nav-item .nav-link {
+  padding: 10px 0 !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+body.sidebar-icon-only .sidebar .nav .nav-item .nav-link .menu-icon {
+  margin-right: 0 !important;
+}
+
+body.sidebar-icon-only .main-panel {
+  width: calc(100% - 70px) !important;
 }
 
 .sidebar .nav {

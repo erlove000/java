@@ -6,9 +6,6 @@
       <img src="images/pmidc.jpg" alt="PMIDC" style="height: 32px; width: auto; border-radius: 6px; margin-right: 10px;">
       <span class="font-weight-bold text-white" style="font-size: 0.95rem; letter-spacing: 0.3px; white-space: nowrap;">Street Light Monitoring</span>
     </a>
-    <a class="navbar-brand brand-logo-mini text-decoration-none" href="dashboard.php">
-      <img src="images/pmidc.jpg" alt="logo" style="height: 30px; border-radius: 6px;"/>
-    </a>
   </div>
 
   <div class="navbar-menu-wrapper d-flex align-items-center justify-content-between">
