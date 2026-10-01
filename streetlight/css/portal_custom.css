@@ -11,10 +11,38 @@
   --border-slate: #e2e8f0;
 }
 
-body {
+html, body {
+  min-height: 100vh !important;
+  height: auto !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
   font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   background-color: #f1f5f9 !important;
   color: #334155;
+}
+
+.container-scroller {
+  min-height: 100vh !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.container-fluid.page-body-wrapper {
+  min-height: calc(100vh - 63px) !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.main-panel {
+  min-height: calc(100vh - 63px) !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.content-wrapper {
+  min-height: calc(100vh - 120px) !important;
+  height: auto !important;
+  padding: 1.5rem 1.5rem !important;
 }
 
 /* 1. Header Navbar Styling */
@@ -22,22 +50,52 @@ body {
   background: linear-gradient(135deg, #0b1329 0%, #1e293b 100%) !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  height: 63px;
 }
 
 .navbar .navbar-brand-wrapper {
   background: transparent !important;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
+  width: 270px !important;
+  min-width: 270px !important;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 .navbar .navbar-brand {
   color: #ffffff !important;
   font-weight: 800;
-  letter-spacing: 0.5px;
-  font-size: 1rem !important;
+  letter-spacing: 0.3px;
+  font-size: 0.95rem !important;
+  margin-right: 0 !important;
 }
 
 .navbar .navbar-menu-wrapper {
   background: transparent !important;
+  color: #ffffff;
+  width: calc(100% - 270px) !important;
+  padding-left: 15px;
+  padding-right: 20px;
+}
+
+.sidebar-toggle-icon-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: 15px;
+}
+
+.sidebar-toggle-icon-btn:hover {
+  background: rgba(2, 132, 199, 0.4);
   color: #ffffff;
 }
 
@@ -58,14 +116,23 @@ body {
   background: rgba(2, 132, 199, 0.25);
   border: 1px solid rgba(56, 189, 248, 0.4);
   color: #7dd3fc;
-  padding: 4px 12px;
+  padding: 6px 14px;
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 700;
   margin-right: 15px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+}
+
+/* Dropdown Menu Positioning & Animation */
+.nav-profile .dropdown-menu {
+  top: 100% !important;
+  right: 0 !important;
+  margin-top: 8px !important;
+  border-radius: 12px !important;
+  border: 1px solid #e2e8f0 !important;
 }
 
 /* 2. Breadcrumb Navigation Bar */
@@ -92,6 +159,11 @@ body {
   background: #ffffff !important;
   border-right: 1px solid #e2e8f0 !important;
   box-shadow: 2px 0 15px rgba(0,0,0,0.03);
+  width: 270px !important;
+}
+
+body.sidebar-icon-only .sidebar {
+  width: 70px !important;
 }
 
 .sidebar .nav {

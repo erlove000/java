@@ -1,23 +1,23 @@
 <link rel="stylesheet" href="css/portal_custom.css">
 
 <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
-  <div class="navbar-brand-wrapper d-flex justify-content-center">
-    <div class="navbar-brand-inner-wrapper d-flex justify-content-between align-items-center w-100 px-3">
-      <a class="navbar-brand brand-logo d-flex align-items-center" href="dashboard.php">
-        <img src="images/pmidc.jpg" alt="PMIDC" style="height: 32px; width: auto; border-radius: 6px; margin-right: 10px;">
-        <span class="font-weight-bold text-white" style="font-size: 0.95rem; letter-spacing: 0.3px;">Street Light Monitoring</span>
-      </a>
-      <a class="navbar-brand brand-logo-mini" href="dashboard.php">
-        <img src="images/pmidc.jpg" alt="logo" style="height: 30px; border-radius: 6px;"/>
-      </a>
-      <button class="navbar-toggler navbar-toggler align-self-center text-white" type="button" data-toggle="minimize">
-        <span class="typcn typcn-th-menu"></span>
-      </button>
-    </div>
+  <div class="navbar-brand-wrapper d-flex align-items-center justify-content-between px-3">
+    <a class="navbar-brand brand-logo d-flex align-items-center text-decoration-none" href="dashboard.php">
+      <img src="images/pmidc.jpg" alt="PMIDC" style="height: 32px; width: auto; border-radius: 6px; margin-right: 10px;">
+      <span class="font-weight-bold text-white" style="font-size: 0.95rem; letter-spacing: 0.3px; white-space: nowrap;">Street Light Monitoring</span>
+    </a>
+    <a class="navbar-brand brand-logo-mini text-decoration-none" href="dashboard.php">
+      <img src="images/pmidc.jpg" alt="logo" style="height: 30px; border-radius: 6px;"/>
+    </a>
   </div>
 
-  <div class="navbar-menu-wrapper d-flex align-items-center justify-content-end">
-    <ul class="navbar-nav mr-lg-2 align-items-center">
+  <div class="navbar-menu-wrapper d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center">
+      <!-- Sidebar Toggle Button (3 lines icon) -->
+      <button class="navbar-toggler align-self-center text-white sidebar-toggle-icon-btn mr-3" type="button" data-toggle="minimize" id="desktopSidebarToggle" title="Toggle Sidebar">
+        <span class="typcn typcn-th-menu"></span>
+      </button>
+
       <?php
       $adid = (int)$_SESSION['aid'];
       $header_staff_name = "User Account";
@@ -33,19 +33,21 @@
       ?>
 
       <!-- Town / ULB Name Pill Badge -->
-      <li class="nav-item d-none d-sm-block">
+      <div class="d-none d-sm-block">
         <span class="town-badge-header">
           <i class="typcn typcn-location"></i> <?php echo htmlspecialchars($header_town_name); ?>
         </span>
-      </li>
+      </div>
+    </div>
 
+    <ul class="navbar-nav align-items-center">
       <!-- User Profile Dropdown -->
       <li class="nav-item nav-profile dropdown">
-        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" data-toggle="dropdown" id="profileDropdown">
+        <a class="nav-link dropdown-toggle d-flex align-items-center text-decoration-none" href="javascript:void(0);" data-toggle="dropdown" id="profileDropdown">
           <img src="images/pmidc.jpg" alt="profile"/>
           <span class="nav-profile-name"><?php echo htmlspecialchars($header_staff_name); ?></span>
         </a>
-        <div class="dropdown-menu dropdown-menu-right navbar-dropdown shadow-lg border-0" aria-labelledby="profileDropdown">
+        <div class="dropdown-menu dropdown-menu-right navbar-dropdown shadow-lg border-0" aria-labelledby="profileDropdown" id="profileDropdownMenu">
           <a class="dropdown-item py-2" href="profile.php">
             <i class="typcn typcn-user-outline text-primary mr-2"></i>
             My Profile
@@ -71,8 +73,34 @@
 
 <script type="text/javascript">
 $(document).ready(function() {
+  // Sidebar Minimizer Toggle Handler (Desktop)
+  $(document).on('click', '[data-toggle="minimize"], #desktopSidebarToggle', function(e) {
+    e.preventDefault();
+    $('body').toggleClass('sidebar-icon-only');
+  });
+
+  // Sidebar Offcanvas Toggle Handler (Mobile)
+  $(document).on('click', '[data-toggle="offcanvas"]', function(e) {
+    e.preventDefault();
+    $('.sidebar-offcanvas').toggleClass('active');
+  });
+
+  // Profile Dropdown Toggle Handler
+  $(document).on('click', '#profileDropdown', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $('#profileDropdownMenu').toggleClass('show');
+  });
+
+  $(document).on('click', function(e) {
+    if (!$(e.target).closest('.nav-profile').length) {
+      $('#profileDropdownMenu').removeClass('show');
+    }
+  });
+
   setInterval(runningTime, 1000);
 });
+
 function runningTime() {
   $.ajax({
     url: 'timeScript.php',

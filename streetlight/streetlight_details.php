@@ -364,24 +364,31 @@ $sql2 = "SELECT districtid, townid FROM streetlightlogin where id=".$_SESSION['a
 
 
 
- if ($townid != '0') {
-                        $query1 = "SELECT  DOA as datedata
-          FROM streetlightdata 
-          WHERE town_id = '".$townid."'
-          AND DOA = (SELECT MAX(DOA) FROM streetlightdata WHERE town_id ='".$townid."'); ";
-                      }
+  $query1 = "";
+  if ($townid != '0') {
+    $query1 = "SELECT total_working_street_light AS tottal, DOA as datedata
+      FROM streetlightdata 
+      WHERE town_id = '".$townid."'
+      AND DOA = (SELECT MAX(DOA) FROM streetlightdata WHERE town_id ='".$townid."'); ";
+  } else {
+    $query1 = "SELECT SUM(total_working_street_light) AS tottal, DOA as datedata
+      FROM streetlightdata 
+      WHERE DATE(DOA) = (SELECT DATE(MAX(DOA)) FROM streetlightdata)";
+  }
 
-                      $results = $con->query($query1);
-                      
-                      if ($results->num_rows > 0) {
-                          while ($row = $results->fetch_assoc()) {
-                              $totsccount = $row['tottal'];
-                              $datetime= $row['datedata'];
-                              list($date, $time) = explode(' ', $datetime);
-
-                          }
-                  
-                      } 
+  $date = '1970-01-01';
+  $totsccount = 0;
+  $results = $con->query($query1);
+  
+  if ($results && $results->num_rows > 0) {
+      while ($row = $results->fetch_assoc()) {
+          $totsccount = isset($row['tottal']) ? $row['tottal'] : 0;
+          $datetime= isset($row['datedata']) ? $row['datedata'] : '';
+          if (!empty($datetime)) {
+            list($date, $time) = explode(' ', $datetime);
+          }
+      }
+  } 
               
        if (date("Y-m-d")>$date && ($value!='0' || $value!=0)) {
 
