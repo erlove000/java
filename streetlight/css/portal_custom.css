@@ -1,0 +1,260 @@
+/* Custom Portal Modern UI Stylesheet for PMIDC Street Light Monitoring */
+
+:root {
+  --primary-blue: #0284c7;
+  --primary-dark: #0f172a;
+  --accent-teal: #0d9488;
+  --success-green: #10b981;
+  --warning-amber: #f59e0b;
+  --danger-red: #ef4444;
+  --bg-slate: #f8fafc;
+  --border-slate: #e2e8f0;
+}
+
+body {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  background-color: #f1f5f9 !important;
+  color: #334155;
+}
+
+/* 1. Header Navbar Styling */
+.navbar {
+  background: linear-gradient(135deg, #0b1329 0%, #1e293b 100%) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.navbar .navbar-brand-wrapper {
+  background: transparent !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.navbar .navbar-brand {
+  color: #ffffff !important;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-size: 1rem !important;
+}
+
+.navbar .navbar-menu-wrapper {
+  background: transparent !important;
+  color: #ffffff;
+}
+
+.nav-profile-name {
+  color: #ffffff !important;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+.nav-profile img {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.town-badge-header {
+  background: rgba(2, 132, 199, 0.25);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #7dd3fc;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-right: 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* 2. Breadcrumb Navigation Bar */
+.navbar-breadcrumb {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 10px 25px !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.navbar-breadcrumb p {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.navbar-breadcrumb i {
+  color: #94a3b8;
+  margin: 0 8px;
+}
+
+/* 3. Sidebar Styling */
+.sidebar {
+  background: #ffffff !important;
+  border-right: 1px solid #e2e8f0 !important;
+  box-shadow: 2px 0 15px rgba(0,0,0,0.03);
+}
+
+.sidebar .nav {
+  padding-top: 15px;
+}
+
+.sidebar-category-header {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  padding: 14px 20px 6px 20px;
+  margin-top: 10px;
+}
+
+.sidebar .nav .nav-item {
+  margin: 2px 10px;
+}
+
+.sidebar .nav .nav-item .nav-link {
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  color: #475569 !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  transition: all 0.2s ease !important;
+}
+
+.sidebar .nav .nav-item .nav-link .menu-icon {
+  font-size: 1.25rem !important;
+  margin-right: 12px !important;
+  color: #0284c7 !important;
+  transition: transform 0.2s ease;
+}
+
+.sidebar .nav .nav-item .nav-link:hover {
+  background: #f1f5f9 !important;
+  color: #0284c7 !important;
+}
+
+.sidebar .nav .nav-item .nav-link:hover .menu-icon {
+  transform: translateX(2px);
+}
+
+.sidebar .nav .nav-item.active > .nav-link {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3) !important;
+}
+
+.sidebar .nav .nav-item.active > .nav-link .menu-icon {
+  color: #ffffff !important;
+}
+
+/* 4. Dashboard Modern KPI Cards */
+.kpi-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.kpi-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+}
+
+.kpi-card.theme-blue::before { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+.kpi-card.theme-teal::before { background: linear-gradient(90deg, #0d9488, #2dd4bf); }
+.kpi-card.theme-indigo::before { background: linear-gradient(90deg, #6366f1, #818cf8); }
+.kpi-card.theme-green::before { background: linear-gradient(90deg, #10b981, #34d399); }
+.kpi-card.theme-amber::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.kpi-card.theme-cyan::before { background: linear-gradient(90deg, #06b6d4, #67e8f9); }
+.kpi-card.theme-rose::before { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+.kpi-card.theme-red::before { background: linear-gradient(90deg, #e11d48, #f87171); }
+
+.kpi-icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+}
+
+.kpi-card.theme-blue .kpi-icon-box { background: rgba(2, 132, 199, 0.1); color: #0284c7; }
+.kpi-card.theme-teal .kpi-icon-box { background: rgba(13, 148, 136, 0.1); color: #0d9488; }
+.kpi-card.theme-indigo .kpi-icon-box { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+.kpi-card.theme-green .kpi-icon-box { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.kpi-card.theme-amber .kpi-icon-box { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.kpi-card.theme-cyan .kpi-icon-box { background: rgba(6, 182, 212, 0.1); color: #06b6d4; }
+.kpi-card.theme-rose .kpi-icon-box { background: rgba(244, 63, 94, 0.1); color: #f43f5e; }
+.kpi-card.theme-red .kpi-icon-box { background: rgba(225, 29, 72, 0.1); color: #e11d48; }
+
+.kpi-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.kpi-value {
+  font-size: 2.3rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+  margin-bottom: 14px;
+}
+
+.kpi-footer-link {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0284c7;
+  text-decoration: none !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: gap 0.2s ease;
+}
+
+.kpi-footer-link:hover {
+  color: #0369a1;
+  gap: 8px;
+}
+
+.date-banner-strip {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 14px 22px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.date-banner-strip strong {
+  color: #0284c7;
+}
+
+/* Card Wrappers */
+.card {
+  border-radius: 14px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
+}

@@ -1,111 +1,85 @@
-<div class="theme-setting-wrapper">
-  <div id="settings-trigger"><i class="typcn typcn-cog-outline"></i></div>
-  <div id="theme-settings" class="settings-panel">
-    <i class="settings-close typcn typcn-times"></i>
-    <p class="settings-heading">SIDEBAR SKINS</p>
-    <div class="sidebar-bg-options selected" id="sidebar-light-theme">
-      <div class="img-ss rounded-circle bg-light border mr-3"></div>Light
-    </div>
-    <div class="sidebar-bg-options" id="sidebar-dark-theme">
-      <div class="img-ss rounded-circle bg-dark border mr-3"></div>Dark
-    </div>
-    <p class="settings-heading mt-2">HEADER SKINS</p>
-    <div class="color-tiles mx-0 px-4">
-      <div class="tiles success"></div>
-      <div class="tiles warning"></div>
-      <div class="tiles danger"></div>
-      <div class="tiles info"></div>
-      <div class="tiles dark"></div>
-      <div class="tiles default"></div>
-    </div>
-  </div>
-</div>
+<?php
+$current_page = basename($_SERVER['PHP_SELF']);
+function get_active_class($page, $current) {
+  return ($page == $current) ? 'active' : '';
+}
+?>
 
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
   <ul class="nav">
-    <li class="nav-item">
+    <div class="sidebar-category-header">Main Operations</div>
+
+    <li class="nav-item <?php echo get_active_class('dashboard.php', $current_page); ?>">
       <a class="nav-link" href="dashboard.php">
         <i class="typcn typcn-device-desktop menu-icon"></i>
         <span class="menu-title">Dashboard</span>
       </a>
     </li>
 
-    <!-- <li class="nav-item">
-      <a class="nav-link" data-toggle="collapse" href="#charts" aria-expanded="false" aria-controls="charts">
-        <i class="typcn typcn-document menu-icon"></i>
-        <span class="menu-title">Street Light Details</span>
-        <i class="menu-arrow"></i>
-      </a>
-      <div class="collapse" id="charts">
-        <ul class="nav flex-column sub-menu">
-          <li class="nav-item"> <a class="nav-link" href="add-scdetails.php">Add Info</a></li>
-        </ul>
-      </div>
-    </li> -->
-    <li class="nav-item">
+    <li class="nav-item <?php echo get_active_class('month_wisedata.php', $current_page); ?>">
       <a class="nav-link" href="month_wisedata.php">
-      <!-- <i class="typcn typcn-info-outline menu-icon"></i> Updated icon -->
-      <i class="typcn typcn-film menu-icon"></i> <!-- Updated icon for reason -->
-      <span class="menu-title">Month Wise Data</span>
+        <i class="typcn typcn-calendar-outline menu-icon"></i>
+        <span class="menu-title">Month Wise Data</span>
       </a>
     </li>
-    <li class="nav-item">
-  <a class="nav-link" href="streetlight_details.php">
-  <i class="typcn  typcn-weather-sunny menu-icon"></i> <!-- Updated icon for reason -->
-  <span class="menu-title">Add Street Light Details</span>
-  </a>
-</li>
 
-    <li class="nav-item">
+    <li class="nav-item <?php echo get_active_class('streetlight_details.php', $current_page); ?>">
+      <a class="nav-link" href="streetlight_details.php">
+        <i class="typcn typcn-weather-sunny menu-icon"></i>
+        <span class="menu-title">Add Streetlight Details</span>
+      </a>
+    </li>
+
+    <li class="nav-item <?php echo get_active_class('add_reason.php', $current_page); ?>">
       <a class="nav-link" href="add_reason.php">
-      <!-- <i class="typcn typcn-info-outline menu-icon"></i> Updated icon -->
-      <i class="typcn typcn-message menu-icon"></i> <!-- Updated icon for reason -->
-      <span class="menu-title">Add Reason</span>
+        <i class="typcn typcn-message-typing menu-icon"></i>
+        <span class="menu-title">Add Reason</span>
       </a>
     </li>
-    <li class="nav-item">
+
+    <div class="sidebar-category-header">Operational Reports</div>
+
+    <li class="nav-item <?php echo get_active_class('view-enquiry.php', $current_page); ?>">
       <a class="nav-link" href="view-enquiry.php">
-      <i class="typcn typcn-export menu-icon"></i> 
-      <span class="menu-title">MIS Data Report</span>
+        <i class="typcn typcn-export-outline menu-icon"></i>
+        <span class="menu-title">MIS Data Report</span>
       </a>
     </li>
-    <li class="nav-item">
+
+    <li class="nav-item <?php echo get_active_class('search_details.php', $current_page); ?>">
       <a class="nav-link" href="search_details.php">
-      <i class="typcn typcn-arrow-down-thick menu-icon"></i> 
-      <span class="menu-title">MIS  Reason Report  </span>
-      </a>
-    </li>
-    <!-- <li class="nav-item">
-      <a class="nav-link" href="PBTRAC.php">
-      <i class="typcn typcn-arrow-down-thick menu-icon"></i> 
-      <span class="menu-title">PBTRAC </span>
-      </a>
-    </li> -->
-    <li class="nav-item">
-      <a class="nav-link" href="PBTRAC.php">
-      <i class="typcn typcn-clipboard menu-icon"></i> 
-      <span class="menu-title">PBTRAC</span>
+        <i class="typcn typcn-document-text menu-icon"></i>
+        <span class="menu-title">MIS Reason Report</span>
       </a>
     </li>
 
-    <li class="nav-item">
+    <li class="nav-item <?php echo get_active_class('PBTRAC.php', $current_page); ?>">
+      <a class="nav-link" href="PBTRAC.php">
+        <i class="typcn typcn-clipboard menu-icon"></i>
+        <span class="menu-title">PBTRAC</span>
+      </a>
+    </li>
+
+    <li class="nav-item <?php echo get_active_class('pbtrac_search.php', $current_page); ?>">
       <a class="nav-link" href="pbtrac_search.php">
-      <i class="typcn typcn-folder menu-icon"></i> 
-      <span class="menu-title">PBTRAC Report</span>
+        <i class="typcn typcn-folder-open menu-icon"></i>
+        <span class="menu-title">PBTRAC Report</span>
       </a>
     </li>
 
-    <li class="nav-item">
+    <div class="sidebar-category-header">Know Your ULB</div>
+
+    <li class="nav-item <?php echo get_active_class('user_profile.php', $current_page); ?>">
       <a class="nav-link" href="user_profile.php">
-      <i class="typcn typcn-document-text menu-icon"></i> 
-      <span class="menu-title">Know Your ULB</span>
+        <i class="typcn typcn-home-outline menu-icon"></i>
+        <span class="menu-title">Know Your ULB Survey</span>
       </a>
     </li>
 
-    <li class="nav-item">
+    <li class="nav-item <?php echo get_active_class('user_profile_report.php', $current_page); ?>">
       <a class="nav-link" href="user_profile_report.php">
-      <i class="typcn typcn-chart-bar-outline menu-icon"></i> 
-      <span class="menu-title">Know Your ULB Report</span>
+        <i class="typcn typcn-chart-bar-outline menu-icon"></i>
+        <span class="menu-title">Know Your ULB Report</span>
       </a>
     </li>
 
@@ -123,41 +97,40 @@
     }
     if ($is_state_admin):
     ?>
-    <!-- Master Admin Section (Visible Only to State Administrators) -->
-    <li class="nav-item nav-category"><span class="nav-link text-uppercase font-weight-bold text-primary">Master Admin Control</span></li>
+    <div class="sidebar-category-header text-primary font-weight-bold">Master Admin Control</div>
 
-    <li class="nav-item">
+    <li class="nav-item <?php echo get_active_class('admin_dashboard.php', $current_page); ?>">
       <a class="nav-link" href="admin_dashboard.php">
-      <i class="typcn typcn-cog menu-icon"></i> 
-      <span class="menu-title">Admin Dashboard</span>
+        <i class="typcn typcn-cog-outline menu-icon"></i>
+        <span class="menu-title">Admin Dashboard</span>
       </a>
     </li>
 
-    <li class="nav-item">
+    <li class="nav-item <?php echo get_active_class('manage_questions.php', $current_page); ?>">
       <a class="nav-link" href="manage_questions.php">
-      <i class="typcn typcn-document-add menu-icon"></i> 
-      <span class="menu-title">Manage Questions</span>
+        <i class="typcn typcn-document-add menu-icon"></i>
+        <span class="menu-title">Manage Questions</span>
       </a>
     </li>
 
-    <li class="nav-item">
+    <li class="nav-item <?php echo get_active_class('manage_users.php', $current_page); ?>">
       <a class="nav-link" href="manage_users.php">
-      <i class="typcn typcn-group menu-icon"></i> 
-      <span class="menu-title">Manage Users</span>
+        <i class="typcn typcn-group-outline menu-icon"></i>
+        <span class="menu-title">Manage Users</span>
       </a>
     </li>
 
-    <li class="nav-item">
+    <li class="nav-item <?php echo get_active_class('manage_ulbs.php', $current_page); ?>">
       <a class="nav-link" href="manage_ulbs.php">
-      <i class="typcn typcn-location-armchair menu-icon"></i> 
-      <span class="menu-title">Manage ULBs & Targets</span>
+        <i class="typcn typcn-location-outline menu-icon"></i>
+        <span class="menu-title">Manage ULBs & Targets</span>
       </a>
     </li>
 
-    <li class="nav-item">
+    <li class="nav-item <?php echo get_active_class('manage_streetlight_data.php', $current_page); ?>">
       <a class="nav-link" href="manage_streetlight_data.php">
-      <i class="typcn typcn-flash menu-icon"></i> 
-      <span class="menu-title">Audit Operational Logs</span>
+        <i class="typcn typcn-flash-outline menu-icon"></i>
+        <span class="menu-title">Audit Operational Logs</span>
       </a>
     </li>
     <?php endif; ?>
