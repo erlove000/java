@@ -37,6 +37,7 @@ html, body {
   min-height: calc(100vh - 63px) !important;
   height: auto !important;
   overflow: visible !important;
+  width: calc(100% - 285px) !important;
 }
 
 .content-wrapper {
@@ -56,8 +57,8 @@ html, body {
 .navbar .navbar-brand-wrapper {
   background: transparent !important;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
-  width: 270px !important;
-  min-width: 270px !important;
+  width: 285px !important;
+  min-width: 285px !important;
   padding-left: 15px;
   padding-right: 15px;
 }
@@ -73,7 +74,7 @@ html, body {
 .navbar .navbar-menu-wrapper {
   background: transparent !important;
   color: #ffffff;
-  width: calc(100% - 270px) !important;
+  width: calc(100% - 285px) !important;
   padding-left: 15px;
   padding-right: 20px;
 }
@@ -159,7 +160,7 @@ html, body {
   background: #ffffff !important;
   border-right: 1px solid #e2e8f0 !important;
   box-shadow: 2px 0 15px rgba(0,0,0,0.03);
-  width: 270px !important;
+  width: 285px !important;
 }
 
 /* Sidebar Icon-Only Collapsed Mode Rules - Universal Overrides */
@@ -224,11 +225,13 @@ body.sidebar-icon-only .main-panel {
 .sidebar .nav .nav-category .nav-link {
   font-size: 0.72rem !important;
   font-weight: 800 !important;
-  letter-spacing: 1px !important;
+  letter-spacing: 0.5px !important;
   color: #94a3b8 !important;
   text-transform: uppercase !important;
   padding: 0 !important;
   background: transparent !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
 }
 
 .sidebar .nav .nav-item {
