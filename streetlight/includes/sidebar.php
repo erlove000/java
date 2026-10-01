@@ -108,5 +108,58 @@
       <span class="menu-title">Know Your ULB Report</span>
       </a>
     </li>
+
+    <?php
+    // Check if logged in user is State Admin (townid = 0)
+    $is_state_admin = false;
+    if (isset($_SESSION['aid'])) {
+      $sql_admin_chk = "SELECT townid FROM streetlightlogin WHERE id = " . (int)$_SESSION['aid'];
+      $res_admin_chk = $con->query($sql_admin_chk);
+      if ($res_admin_chk && $r_adm = $res_admin_chk->fetch_assoc()) {
+        if ($r_adm['townid'] == 0) {
+          $is_state_admin = true;
+        }
+      }
+    }
+    if ($is_state_admin):
+    ?>
+    <!-- Master Admin Section (Visible Only to State Administrators) -->
+    <li class="nav-item nav-category"><span class="nav-link text-uppercase font-weight-bold text-primary">Master Admin Control</span></li>
+
+    <li class="nav-item">
+      <a class="nav-link" href="admin_dashboard.php">
+      <i class="typcn typcn-cog menu-icon"></i> 
+      <span class="menu-title">Admin Dashboard</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a class="nav-link" href="manage_questions.php">
+      <i class="typcn typcn-document-add menu-icon"></i> 
+      <span class="menu-title">Manage Questions</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a class="nav-link" href="manage_users.php">
+      <i class="typcn typcn-group menu-icon"></i> 
+      <span class="menu-title">Manage Users</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a class="nav-link" href="manage_ulbs.php">
+      <i class="typcn typcn-location-armchair menu-icon"></i> 
+      <span class="menu-title">Manage ULBs & Targets</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a class="nav-link" href="manage_streetlight_data.php">
+      <i class="typcn typcn-flash menu-icon"></i> 
+      <span class="menu-title">Audit Operational Logs</span>
+      </a>
+    </li>
+    <?php endif; ?>
   </ul>
 </nav>
