@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="css/portal_custom.css">
+<link rel="stylesheet" href="css/portal_custom.css?v=1.3">
 
 <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
   <div class="navbar-brand-wrapper d-flex align-items-center justify-content-between px-3">

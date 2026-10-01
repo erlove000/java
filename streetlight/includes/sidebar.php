@@ -7,7 +7,7 @@ function get_active_class($page, $current) {
 
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
   <ul class="nav">
-    <div class="sidebar-category-header">Main Operations</div>
+    <li class="nav-item nav-category sidebar-category-header"><span class="nav-link">Main Operations</span></li>
 
     <li class="nav-item <?php echo get_active_class('dashboard.php', $current_page); ?>">
       <a class="nav-link" href="dashboard.php">
@@ -37,7 +37,7 @@ function get_active_class($page, $current) {
       </a>
     </li>
 
-    <div class="sidebar-category-header">Operational Reports</div>
+    <li class="nav-item nav-category sidebar-category-header"><span class="nav-link">Operational Reports</span></li>
 
     <li class="nav-item <?php echo get_active_class('view-enquiry.php', $current_page); ?>">
       <a class="nav-link" href="view-enquiry.php">
@@ -67,7 +67,7 @@ function get_active_class($page, $current) {
       </a>
     </li>
 
-    <div class="sidebar-category-header">Know Your ULB</div>
+    <li class="nav-item nav-category sidebar-category-header"><span class="nav-link">Know Your ULB</span></li>
 
     <li class="nav-item <?php echo get_active_class('user_profile.php', $current_page); ?>">
       <a class="nav-link" href="user_profile.php">
@@ -97,7 +97,7 @@ function get_active_class($page, $current) {
     }
     if ($is_state_admin):
     ?>
-    <div class="sidebar-category-header text-primary font-weight-bold">Master Admin Control</div>
+    <li class="nav-item nav-category sidebar-category-header text-primary"><span class="nav-link">Master Admin Control</span></li>
 
     <li class="nav-item <?php echo get_active_class('admin_dashboard.php', $current_page); ?>">
       <a class="nav-link" href="admin_dashboard.php">
