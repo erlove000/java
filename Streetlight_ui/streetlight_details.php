@@ -364,31 +364,27 @@ $sql2 = "SELECT districtid, townid FROM streetlightlogin where id=".$_SESSION['a
 
 
 
- if ($townid != '0') {
-                        $query1 = "SELECT  DOA as datedata
-          FROM streetlightdata 
-          WHERE town_id = '".$townid."'
-          AND DOA = (SELECT MAX(DOA) FROM streetlightdata WHERE town_id ='".$townid."'); ";
+                      $date = "";
+                      if ($townid != '0') {
+                          $query1 = "SELECT  DOA as datedata
+                          FROM streetlightdata 
+                          WHERE town_id = '".$townid."'
+                          AND DOA = (SELECT MAX(DOA) FROM streetlightdata WHERE town_id ='".$townid."'); ";
+                          
+                          $results = $con->query($query1);
+                          
+                          if ($results && $results->num_rows > 0) {
+                              while ($row = $results->fetch_assoc()) {
+                                  $datetime= $row['datedata'];
+                                  $parts = explode(' ', $datetime);
+                                  $date = $parts[0];
+                              }
+                          } 
                       }
-
-                      $results = $con->query($query1);
-                      
-                      if ($results->num_rows > 0) {
-                          while ($row = $results->fetch_assoc()) {
-                              $totsccount = $row['tottal'];
-                              $datetime= $row['datedata'];
-                              list($date, $time) = explode(' ', $datetime);
-
-                          }
-                  
-                      } 
               
-       if (date("Y-m-d")>$date && ($value!='0' || $value!=0)) {
-
-
-
-               echo'     <button type="submit" class="btn btn-primary mr-2"  name="sa">Submit</button>';
-           }    ?>
+                      if ($townid == '0' || (date("Y-m-d") > $date && ($value != '0' || $value != 0))) {
+                          echo'     <button type="submit" class="btn btn-primary mr-2"  name="sa">Submit</button>';
+                      }    ?>
          </form>
                   
   

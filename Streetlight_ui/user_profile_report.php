@@ -60,6 +60,24 @@ $sql_rows = "SELECT p.*, t.district_name as dist_mapped, t.town_name as town_map
 
 $res_rows = $con->query($sql_rows);
 
+// Fetch Dynamic Questions
+$dyn_questions = [];
+$dyn_categories = [];
+$sql_dyn_q = "SELECT sq.*, sc.category_name FROM survey_questions sq LEFT JOIN survey_categories sc ON sq.category_id = sc.id WHERE sq.mapped_column IS NULL OR sq.mapped_column = '' ORDER BY sc.display_order ASC, sq.display_order ASC";
+$res_dyn_q = $con->query($sql_dyn_q);
+if ($res_dyn_q && $res_dyn_q->num_rows > 0) {
+    while ($row_q = $res_dyn_q->fetch_assoc()) {
+        $dyn_questions[] = $row_q;
+        if (!isset($dyn_categories[$row_q['category_id']])) {
+            $dyn_categories[$row_q['category_id']] = [
+                'name' => $row_q['category_name'] ? $row_q['category_name'] : 'Custom Category',
+                'count' => 0
+            ];
+        }
+        $dyn_categories[$row_q['category_id']]['count']++;
+    }
+}
+
 function fmt($val, $suffix = '') {
   if ($val === NULL || $val === '') return '-';
   return htmlspecialchars($val) . $suffix;
@@ -273,6 +291,11 @@ function fmt($val, $suffix = '') {
                           <th colspan="2" class="cat-amenities">11. Public Amenities (Q90-Q91)</th>
                           <th colspan="2" class="cat-livelihood">12. Urban Livelihood (Q92-Q93)</th>
                           <th colspan="17" class="cat-wash">13. WASH (Q94-Q110)</th>
+                          <?php
+                          foreach ($dyn_categories as $cat) {
+                              echo '<th colspan="'.$cat['count'].'" class="cat-meta" style="background-color:#6366f1;">'.htmlspecialchars($cat['name']).'</th>';
+                          }
+                          ?>
                           <th colspan="4" class="cat-meta">Submission Info</th>
                         </tr>
                         <!-- Individual Column Names Row -->
@@ -412,6 +435,12 @@ function fmt($val, $suffix = '') {
                           <th>SWM Exp (₹ Lakh)</th>
                           <th>Legacy Waste Dumpsite</th>
 
+                          <!-- Dynamic Questions -->
+                          <?php
+                          foreach ($dyn_questions as $dq) {
+                              echo '<th>'.htmlspecialchars($dq['question_text']).'</th>';
+                          }
+                          ?>
                           <!-- Metadata -->
                           <th>Updated By</th>
                           <th>Status</th>
@@ -423,6 +452,15 @@ function fmt($val, $suffix = '') {
                         <?php
                         if ($res_rows && $res_rows->num_rows > 0) {
                           while ($row = $res_rows->fetch_assoc()) {
+                              // Fetch dynamic answers for this town
+                              $town_ans = [];
+                              $sql_ans = "SELECT question_id, answer_text FROM survey_answers WHERE town_id = ".$row['town_id'];
+                              $res_ans = $con->query($sql_ans);
+                              if ($res_ans) {
+                                  while ($a_row = $res_ans->fetch_assoc()) {
+                                      $town_ans[$a_row['question_id']] = $a_row['answer_text'];
+                                  }
+                              }
                         ?>
                             <tr>
                               <td class="sticky-col-1 font-weight-bold">#<?php echo $row['id']; ?></td>
@@ -559,6 +597,14 @@ function fmt($val, $suffix = '') {
                               <td><?php echo fmt($row['waste_segregation_pct'], '%'); ?></td>
                               <td><?php echo fmt($row['swm_annual_exp_lakh']); ?></td>
                               <td><?php echo fmt($row['legacy_waste_dumpsite']); ?></td>
+
+                              <!-- Dynamic Answers -->
+                              <?php
+                              foreach ($dyn_questions as $dq) {
+                                  $ans_val = isset($town_ans[$dq['id']]) ? $town_ans[$dq['id']] : '-';
+                                  echo '<td>'.fmt($ans_val).'</td>';
+                              }
+                              ?>
 
                               <!-- Metadata -->
                               <td><?php echo fmt($row['updated_by']); ?></td>

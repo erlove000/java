@@ -124,6 +124,27 @@ if(isset($_POST['delete_question'])) {
     if($delete) { $msg = "<div class='alert alert-success'>Question deleted successfully!</div>"; }
 }
 
+// Delete Category
+if(isset($_POST['delete_category'])) {
+    $c_id = (int)$_POST['category_id'];
+    // Delete associated questions
+    mysqli_query($con, "DELETE FROM survey_questions WHERE category_id=$c_id");
+    // Delete the category
+    $delete = mysqli_query($con, "DELETE FROM survey_categories WHERE id=$c_id");
+    if($delete) { $msg = "<div class='alert alert-success'>Category and its questions deleted successfully!</div>"; }
+    else { $msg = "<div class='alert alert-danger'>Failed to delete category.</div>"; }
+}
+
+// Edit Category
+if(isset($_POST['edit_category'])) {
+    $c_id = (int)$_POST['category_id'];
+    $category_name = mysqli_real_escape_string($con, $_POST['category_name']);
+    $display_order = (int)$_POST['display_order'];
+    $update = mysqli_query($con, "UPDATE survey_categories SET category_name='$category_name', display_order=$display_order WHERE id=$c_id");
+    if($update) { $msg = "<div class='alert alert-success'>Category updated successfully!</div>"; }
+    else { $msg = "<div class='alert alert-danger'>Failed to update category.</div>"; }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -198,6 +219,63 @@ if(isset($_POST['delete_question'])) {
                       <div class="category-block mb-4">
                           <div class="category-header">
                               <span><i class="fa-regular fa-folder-open text-primary mr-2"></i> <?php echo htmlspecialchars($category['category_name']); ?></span>
+                              <div>
+                                  <button class="btn btn-sm text-primary" data-bs-toggle="modal" data-bs-target="#editCatModal<?php echo $category['id']; ?>"><i class="fa-solid fa-pen"></i></button>
+                                  <button class="btn btn-sm text-danger" data-bs-toggle="modal" data-bs-target="#delCatModal<?php echo $category['id']; ?>"><i class="fa-solid fa-trash"></i></button>
+                              </div>
+                          </div>
+
+                          <!-- Edit Category Modal -->
+                          <div class="modal fade" id="editCatModal<?php echo $category['id']; ?>" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                              <div class="modal-content" style="border-radius:12px; border:none;">
+                                <div class="modal-header" style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+                                  <h5 class="modal-title font-weight-bold">Edit Section</h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form method="post">
+                                    <div class="modal-body p-4">
+                                        <input type="hidden" name="category_id" value="<?php echo $category['id']; ?>">
+                                        <div class="mb-3">
+                                            <label class="form-label font-weight-bold" style="font-size:0.85rem;">Section Name</label>
+                                            <input type="text" name="category_name" class="form-control p-2" required value="<?php echo htmlspecialchars($category['category_name']); ?>">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label font-weight-bold" style="font-size:0.85rem;">Display Order</label>
+                                            <input type="number" name="display_order" class="form-control p-2" value="<?php echo (int)$category['display_order']; ?>">
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer" style="border-top:1px solid #e2e8f0;">
+                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" name="edit_category" class="btn btn-primary" style="background:#0284c7;">Update Section</button>
+                                    </div>
+                                </form>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Delete Category Modal -->
+                          <div class="modal fade" id="delCatModal<?php echo $category['id']; ?>" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                              <div class="modal-content" style="border-radius:12px; border:none;">
+                                <div class="modal-header" style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+                                  <h5 class="modal-title font-weight-bold text-danger">Delete Section</h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form method="post">
+                                    <div class="modal-body p-4 text-center">
+                                        <input type="hidden" name="category_id" value="<?php echo $category['id']; ?>">
+                                        <i class="fa-solid fa-triangle-exclamation text-danger fa-3x mb-3"></i>
+                                        <p>Are you sure you want to delete this section AND all its questions? This action cannot be undone.</p>
+                                        <p class="text-muted small">"<?php echo htmlspecialchars($category['category_name']); ?>"</p>
+                                    </div>
+                                    <div class="modal-footer" style="border-top:1px solid #e2e8f0;">
+                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" name="delete_category" class="btn btn-danger">Delete Permanently</button>
+                                    </div>
+                                </form>
+                              </div>
+                            </div>
                           </div>
                           <div class="question-list pl-4">
                               <?php

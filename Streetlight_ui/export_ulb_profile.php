@@ -39,6 +39,16 @@ header('Content-Disposition: attachment; filename=' . $filename);
 
 $output = fopen('php://output', 'w');
 
+// Fetch Dynamic Questions
+$dyn_questions = [];
+$sql_dyn_q = "SELECT id, question_text FROM survey_questions WHERE mapped_column IS NULL OR mapped_column = '' ORDER BY category_id ASC, display_order ASC";
+$res_dyn_q = $con->query($sql_dyn_q);
+if ($res_dyn_q && $res_dyn_q->num_rows > 0) {
+    while ($row_q = $res_dyn_q->fetch_assoc()) {
+        $dyn_questions[] = $row_q;
+    }
+}
+
 // Header Row (110+ Columns)
 $headers = array(
   'ULB Name', 'District Name', 'Type of ULB', 'MC / EO Details', 'Nodal Officer Details',
@@ -63,8 +73,15 @@ $headers = array(
   'Piped Water Coverage (%)', 'Water Connections Count', 'Metered Water Connections', 'Avg Water Supply Hours', 'Non Revenue Water Loss (%)',
   'Water Supply Exp (Lakh)', 'Water Pumping Elec Exp (Lakh)', 'Sewerage Coverage (%)', 'Sewage Generated (MLD)', 'STP Installed Cap (MLD)',
   'Actual Sewage Treated (MLD)', 'Treated Wastewater Reused', 'Solid Waste Generated (TPD)', 'Door to Door Waste Cov (%)', 'Waste Segregation (%)',
-  'SWM Annual Exp (Lakh)', 'Legacy Waste Dumpsite', 'Updated By', 'Status', 'Last Updated At'
+  'SWM Annual Exp (Lakh)', 'Legacy Waste Dumpsite'
 );
+
+foreach ($dyn_questions as $dq) {
+    $headers[] = $dq['question_text'];
+}
+$headers[] = 'Updated By';
+$headers[] = 'Status';
+$headers[] = 'Last Updated At';
 
 fputcsv($output, $headers);
 
@@ -73,7 +90,17 @@ $res_rows = $con->query($sql_rows);
 
 if ($res_rows && $res_rows->num_rows > 0) {
   while ($row = $res_rows->fetch_assoc()) {
-    fputcsv($output, array(
+      // Fetch dynamic answers for this town
+      $town_ans = [];
+      $sql_ans = "SELECT question_id, answer_text FROM survey_answers WHERE town_id = ".$row['town_id'];
+      $res_ans = $con->query($sql_ans);
+      if ($res_ans) {
+          while ($a_row = $res_ans->fetch_assoc()) {
+              $town_ans[$a_row['question_id']] = $a_row['answer_text'];
+          }
+      }
+
+      $row_data = array(
       $row['ulb_name'], $row['district_name'], $row['ulb_type'], $row['mc_eo_details'], $row['nodal_officer_details'],
       $row['num_wards'], $row['geo_area_sqkm'], $row['population_households'], $row['ulb_known_for'], $row['top_complaint_services'],
       $row['total_properties'], $row['total_land_parcels'], $row['total_land_area_acres'], $row['vacant_land_parcels'], $row['encroached_land_acres'],
@@ -96,8 +123,18 @@ if ($res_rows && $res_rows->num_rows > 0) {
       $row['piped_water_coverage_pct'], $row['water_connections_count'], $row['metered_water_connections'], $row['avg_water_supply_hours'], $row['non_revenue_water_pct'],
       $row['water_supply_exp_lakh'], $row['water_pumping_elec_exp_lakh'], $row['sewerage_coverage_pct'], $row['sewage_generated_mld'], $row['stp_installed_cap_mld'],
       $row['actual_sewage_treated_mld'], $row['treated_wastewater_reused'], $row['msw_generated_tpd'], $row['door_to_door_waste_cov_pct'], $row['waste_segregation_pct'],
-      $row['swm_annual_exp_lakh'], $row['legacy_waste_dumpsite'], $row['updated_by'], $row['status'], $row['updated_at']
-    ));
+      $row['swm_annual_exp_lakh'], $row['legacy_waste_dumpsite']
+      );
+
+      foreach ($dyn_questions as $dq) {
+          $row_data[] = isset($town_ans[$dq['id']]) ? $town_ans[$dq['id']] : '-';
+      }
+
+      $row_data[] = $row['updated_by'];
+      $row_data[] = $row['status'];
+      $row_data[] = $row['updated_at'];
+
+      fputcsv($output, $row_data);
   }
 }
 
